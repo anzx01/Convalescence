@@ -484,7 +484,7 @@
 ```sql
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  openid VARCHAR(100) UNIQUE NOT NULL,
+  wechat_openid VARCHAR(100) UNIQUE NOT NULL, -- 微信用户标识，仅服务端保存
   phone VARCHAR(20),
   role VARCHAR(20) NOT NULL, -- 'patient' | 'family'
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -699,8 +699,7 @@ Body: {
   iv: string              // 加密算法初始向量（可选）
 }
 Response: {
-  token: string,          // 会话token
-  sessionKey: string,     // 会话密钥（服务端保存）
+  token: string,          // 应用会话token；session_key仅服务端保存，不返回前端
   user: User
 }
 ```
@@ -827,7 +826,7 @@ Response: { success: boolean }
 
 POST /api/notifications/send
 Body: {
-  openid: string,
+  wechat_openid: string, // 微信用户标识，仅服务端使用
   template_id: string,
   data: {},
   page: string  // 跳转页面
@@ -889,8 +888,8 @@ Response: { msgid: string }
 - [ ] API测试工具（Postman/Apifox）
 
 ### 第三方服务
-- [ ] 短信服务（腾讯云短信，备用通知渠道）
-- [ ] 对象存储COS（存储用户上传的图片）
+- [ ] 短信服务（腾讯云短信，备用通知渠道；上线前需取得用户单独同意并提供退订/关闭方式）
+- [ ] 对象存储COS（仅在用户主动上传头像、报告等文件时启用；默认不采集影像资料）
 
 ---
 
@@ -960,9 +959,9 @@ Response: { msgid: string }
 - 支持主流品牌：欧姆龙、鱼跃、乐心等
 
 ### AI健康助手
-- 基于历史数据提供个性化健康建议
-- 异常数据智能预警（如血压持续偏高）
-- 康复进度评估报告
+- 仅提供健康记录总结、趋势展示和就医提醒，不提供诊断、治疗、处方或用药调整建议
+- 异常数据仅提示用户咨询医生或及时就医
+- 上线前需完成算法/AI功能风险评估和人工审核机制设计
 
 ### 医生端小程序
 - 医生可查看患者康复数据
@@ -990,10 +989,9 @@ Response: { msgid: string }
 - 康复数据作为保险理赔依据
 - 健康管理服务包
 
-### 远程问诊
-- 在线咨询医生（图文/视频）
-- 电子处方开具
-- 药品配送服务
+### 远程问诊（仅作为远期设想）
+- 如涉及在线咨询、电子处方或药品配送，需另行取得医疗机构、医师执业、互联网诊疗、药品经营等相关资质
+- 未取得相应资质前，不在产品中提供问诊、诊断、处方或售药能力
 
 ### 大数据分析
 - 康复效果分析模型
@@ -1054,12 +1052,6 @@ Response: { msgid: string }
       }
     ]
   },
-  "permission": {
-    "scope.userLocation": {
-      "desc": "用于查找附近医院"
-    }
-  },
-  "requiredBackgroundModes": ["audio"],
   "usingComponents": {
     "van-button": "@vant/weapp/button/index",
     "van-cell": "@vant/weapp/cell/index"
@@ -1187,3 +1179,12 @@ Response: { msgid: string }
 ## 免责声明
 
 本产品仅提供健康管理提醒服务，不提供任何医疗诊断、治疗建议。所有康复计划应在医生指导下进行。如有身体不适，请及时就医。
+---
+
+## 发布合规提示
+
+本产品方案仅用于健康管理提醒，不提供医疗诊断、治疗、处方、用药调整或急救服务。所有用药、运动、复诊和康复安排应由用户根据医生医嘱录入或确认；如出现胸痛、胸闷、气短、晕厥、出血等异常情况，应立即就医或联系急救服务。
+
+产品涉及姓名、出生年份、手术日期、诊断、用药记录、症状、血压、医院和医生等医疗健康信息，属于敏感个人信息。正式开发和上线前必须提供用户协议、隐私政策、个人信息收集清单、权限说明、数据删除/导出/注销入口，并在处理敏感个人信息、向家属共享数据、使用短信或云端存储前取得用户单独同意。
+
+医学指南、药物名称、默认剂量、康复任务和阈值仅为产品原型示例，不可作为临床依据。上线前应由具备资质的医疗专业人员审核，并以最新官方指南、药品说明书和医生医嘱为准。
